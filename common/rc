@@ -174,10 +174,22 @@ _get_hugepagesize()
 		_notrun "Cannot get the value of Hugepagesize"
 	echo $((hugepgsz * 1024))
 }
+_set_readahead()
+{
+	if [ "$MOUNT_READAHEAD" ]; then
+		echo "Setting readahead on $1 to $MOUNT_READAHEAD"
+		common/readahead.sh set $1 $MOUNT_READAHEAD
+		grep $1 /proc/mounts
+	fi
+}
 
 _mount()
 {
-    $MOUNT_PROG `_mount_ops_filter $*`
+	local mnt_point=${!#}
+	$MOUNT_PROG `_mount_ops_filter $*`
+	if [ $? -eq 0 ]; then
+		_set_readahead $mnt_point
+	fi
 }
 
 # Call _mount to do mount operation but also save mountpoint to
